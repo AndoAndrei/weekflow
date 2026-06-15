@@ -1,0 +1,24 @@
+{
+  "short_name": "WeekFlow",
+  "name": "WeekFlow - Weekly Planner",
+  "description": "A minimalist weekly to-do planner",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#FFFDF7",
+  "background_color": "#FFFDF7",
+  "orientation": "portrait"
+}
