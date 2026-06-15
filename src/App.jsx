@@ -58,17 +58,6 @@ export default function App() {
                 {weekRangeLabel()}
               </p>
             </div>
-            <button
-              onClick={forceRollover}
-              className="w-9 h-9 rounded-full flex items-center justify-center mb-0.5"
-              style={{ backgroundColor: '#F2F2F7' }}
-              aria-label="Sync tasks"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M8 2.5V5.5L10.5 4" stroke="#8E8E93" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
           </div>
         </header>
 
