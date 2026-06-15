@@ -86,9 +86,11 @@ export default function TaskRow({
   };
 
   const saveComment = () => {
-    setEditingComment(false);
-    onComment(task.id, commentText);
-  };
+  setEditingComment(false);
+  setExpanded(false);
+  onComment(task.id, commentText);
+};
+
 
   if (deleted) return null;
 
