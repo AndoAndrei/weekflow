@@ -28,8 +28,7 @@ A minimalist weekly to-do planner built as a Progressive Web App (PWA). Inspired
 | Styling | Tailwind CSS 3 |
 | Storage | Browser LocalStorage |
 | PWA | Custom Service Worker |
-| Hosting | GitHub Pages (free) |
-| CI/CD | GitHub Actions |
+
 
 ---
 
