@@ -133,7 +133,13 @@ export default function TaskRow({
             ))}
           </div>
 
-          <Checkbox checked={task.completed} onChange={(e) => { e.stopPropagation(); onToggle(task.id); }} />
+          <div
+  onTouchStart={(e) => e.stopPropagation()}
+  onTouchEnd={(e) => e.stopPropagation()}
+>
+  <Checkbox checked={task.completed} onChange={() => onToggle(task.id)} />
+</div>
+
 
           <div className="flex-1 min-w-0">
             <span
