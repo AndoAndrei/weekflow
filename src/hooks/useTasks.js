@@ -2,7 +2,7 @@
 // WeekFlow
 // Author: Andrei Ando
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { loadTasks, saveTasks, loadLastOpen, saveLastOpen } from '../utils/storage';
 import { toDateKey, todayKey, getWeekStart } from '../utils/weekUtils';
@@ -10,7 +10,6 @@ import { toDateKey, todayKey, getWeekStart } from '../utils/weekUtils';
 function applyRollover(tasks) {
   const today = todayKey();
   const todayWeekStart = toDateKey(getWeekStart(new Date()));
-
   return tasks.map((task) => {
     if (task.completed) return task;
     const taskDate = task.assignedDate;
@@ -51,7 +50,6 @@ export default function useTasks() {
   }, []);
 
   const addTask = useCallback((title, assignedDate) => {
-    // Find max order for that day
     setTasks((prev) => {
       const dayTasks = prev.filter(t => t.assignedDate === (assignedDate || todayKey()));
       const maxOrder = dayTasks.reduce((m, t) => Math.max(m, t.order ?? 0), -1);
@@ -60,6 +58,7 @@ export default function useTasks() {
         title: title.trim(),
         comment: '',
         completed: false,
+        completedAt: null,
         assignedDate: assignedDate || todayKey(),
         createdAt: new Date().toISOString(),
         order: maxOrder + 1,
@@ -69,7 +68,16 @@ export default function useTasks() {
   }, []);
 
   const toggleTask = useCallback((id) => {
-    setTasks((prev) => prev.map((t) => t.id === id ? { ...t, completed: !t.completed } : t));
+    setTasks((prev) => prev.map((t) => {
+      if (t.id !== id) return t;
+      const nowCompleted = !t.completed;
+      return {
+        ...t,
+        completed: nowCompleted,
+        // Record timestamp when completing; clear it when un-completing
+        completedAt: nowCompleted ? new Date().toISOString() : null,
+      };
+    }));
   }, []);
 
   const editTask = useCallback((id, newTitle) => {
@@ -80,34 +88,57 @@ export default function useTasks() {
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, comment } : t));
   }, []);
 
+  // ---- Soft delete with undo ----
+  const [pendingDeletes, setPendingDeletes] = useState([]); // [{ id, task, expiresAt }]
+  const deleteTimers = useRef({});
+
   const deleteTask = useCallback((id) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+
+    // Remove from main list immediately so the UI feels instant
     setTasks((prev) => prev.filter((t) => t.id !== id));
+
+    // Track as pending so it can be undone
+    setPendingDeletes((prev) => [...prev, { id, task, expiresAt: Date.now() + 4000 }]);
+
+    deleteTimers.current[id] = setTimeout(() => {
+      setPendingDeletes((prev) => prev.filter((p) => p.id !== id));
+      delete deleteTimers.current[id];
+    }, 4000);
+  }, [tasks]);
+
+  const undoDelete = useCallback((id) => {
+    clearTimeout(deleteTimers.current[id]);
+    delete deleteTimers.current[id];
+
+    setPendingDeletes((prev) => {
+      const entry = prev.find((p) => p.id === id);
+      if (entry) {
+        setTasks((prevTasks) => [...prevTasks, entry.task]);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
   }, []);
 
-  // Move task to a new day and/or a new position index within that day
   const moveTask = useCallback((taskId, targetDateKey, targetIndex) => {
     setTasks((prev) => {
       const task = prev.find(t => t.id === taskId);
       if (!task) return prev;
-
-      // Remove task from its current position
       const without = prev.filter(t => t.id !== taskId);
-
-      // Get tasks for the target day (sorted by order), excluding the moving task
       const dayTasks = without
         .filter(t => t.assignedDate === targetDateKey)
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-      // Insert at target index
       dayTasks.splice(targetIndex, 0, { ...task, assignedDate: targetDateKey });
-
-      // Re-assign order values for that day
       const reordered = dayTasks.map((t, i) => ({ ...t, order: i }));
-
-      // Merge back
       const otherTasks = without.filter(t => t.assignedDate !== targetDateKey);
       return [...otherTasks, ...reordered];
     });
+  }, []);
+
+  // Replace all tasks (used after import restore)
+  const restoreTasks = useCallback((imported) => {
+    setTasks(imported);
   }, []);
 
   const tasksForDay = useCallback(
@@ -123,5 +154,9 @@ export default function useTasks() {
     saveLastOpen(todayKey());
   }, []);
 
-  return { tasks, addTask, toggleTask, editTask, setComment, deleteTask, moveTask, tasksForDay, forceRollover };
+  return {
+    tasks, addTask, toggleTask, editTask, setComment,
+    deleteTask, undoDelete, pendingDeletes,
+    moveTask, restoreTasks, tasksForDay, forceRollover,
+  };
 }
