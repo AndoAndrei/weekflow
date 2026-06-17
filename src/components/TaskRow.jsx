@@ -86,11 +86,10 @@ export default function TaskRow({
   };
 
   const saveComment = () => {
-  setEditingComment(false);
-  setExpanded(false);
-  onComment(task.id, commentText);
-};
-
+    setEditingComment(false);
+    setExpanded(false);
+    onComment(task.id, commentText);
+  };
 
   if (deleted) return null;
 
@@ -136,12 +135,11 @@ export default function TaskRow({
           </div>
 
           <div
-  onTouchStart={(e) => e.stopPropagation()}
-  onTouchEnd={(e) => e.stopPropagation()}
->
-  <Checkbox checked={task.completed} onChange={() => onToggle(task.id)} />
-</div>
-
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            <Checkbox checked={task.completed} onChange={() => onToggle(task.id)} />
+          </div>
 
           <div className="flex-1 min-w-0">
             <span
@@ -176,12 +174,12 @@ export default function TaskRow({
 
         {/* Expanded comment area */}
         {expanded && (
-         <div
-    className="px-4 pb-3"
-    style={{ borderTop: '1px solid #F2F2F2' }}
-    onTouchStart={(e) => e.stopPropagation()}
-    onTouchEnd={(e) => e.stopPropagation()}
-  >
+          <div
+            className="px-4 pb-3"
+            style={{ borderTop: '1px solid #F2F2F2' }}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center gap-2 pt-2 mb-1">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <path d="M1 1h11v8H7.5L4 12V9H1V1z" stroke="#C7C7CC" strokeWidth="1.2" strokeLinejoin="round" />
@@ -238,9 +236,9 @@ export default function TaskRow({
 
             {/* Edit title */}
             <button
-  onClick={(e) => {
-    e.stopPropagation();
-    const newTitle = window.prompt('Edit task', task.title);
+              onClick={(e) => {
+                e.stopPropagation();
+                const newTitle = window.prompt('Edit task', task.title);
                 if (newTitle && newTitle.trim()) onEdit(task.id, newTitle.trim());
               }}
               className="mt-3 text-xs"
