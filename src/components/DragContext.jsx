@@ -17,11 +17,18 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
   const ghostRef = useRef(null);
   const frameRef = useRef(null);
   const lastPos = useRef({ x: 0, y: 0 });
+  const scrollIntervalRef = useRef(null);
+  const EDGE_ZONE = 90;       // px from top/bottom that triggers auto-scroll
+  const MAX_SCROLL_SPEED = 14; // px per frame at the very edge
 
   const cleanup = useCallback(() => {
     if (ghostRef.current) {
       ghostRef.current.remove();
       ghostRef.current = null;
+    }
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
     }
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
@@ -69,7 +76,7 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
     if (!dragging) return;
 
     const onMove = (e) => {
-      e.preventDefault(); // block page scroll while dragging a task
+      e.preventDefault(); // block native page scroll, we drive scroll manually below
       const touch = e.touches[0];
       lastPos.current = { x: touch.clientX, y: touch.clientY };
 
@@ -80,6 +87,36 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
         const dy = touch.clientY - (originRect.top + originRect.height / 2);
         ghostRef.current.style.transform = `translate(${dx}px, ${dy}px) scale(1.03)`;
       });
+
+      // ---- Auto-scroll when finger nears top/bottom edge of viewport ----
+      const viewportH = window.innerHeight;
+      const distFromTop = touch.clientY;
+      const distFromBottom = viewportH - touch.clientY;
+
+      let scrollSpeed = 0;
+      if (distFromTop < EDGE_ZONE) {
+        const intensity = (EDGE_ZONE - distFromTop) / EDGE_ZONE;
+        scrollSpeed = -intensity * MAX_SCROLL_SPEED;
+      } else if (distFromBottom < EDGE_ZONE) {
+        const intensity = (EDGE_ZONE - distFromBottom) / EDGE_ZONE;
+        scrollSpeed = intensity * MAX_SCROLL_SPEED;
+      }
+
+      if (scrollSpeed !== 0) {
+        if (!scrollIntervalRef.current) {
+          scrollIntervalRef.current = setInterval(() => {
+            window.scrollBy(0, scrollSpeed);
+          }, 16);
+        }
+        // Update speed on the fly by restarting interval with new closure value
+        clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = setInterval(() => {
+          window.scrollBy(0, scrollSpeed);
+        }, 16);
+      } else if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
 
       // Determine drop target
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
