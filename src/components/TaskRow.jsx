@@ -24,6 +24,7 @@ export default function TaskRow({
   const [expanded, setExpanded] = useState(false);
   const [commentText, setCommentText] = useState(task.comment || '');
   const [editingComment, setEditingComment] = useState(false);
+  const [dragLocked, setDragLocked] = useState(false); // locks touch-action once a drag begins
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -44,6 +45,7 @@ export default function TaskRow({
     longPressTimer.current = setTimeout(() => {
       if (!didSwipe.current) {
         didDrag.current = true;
+        setDragLocked(true);
         onDragStart(task.id, rowRef.current);
       }
     }, LONG_PRESS_MS);
@@ -68,7 +70,11 @@ export default function TaskRow({
 
   const onTouchEnd = () => {
     clearTimeout(longPressTimer.current);
-    if (didDrag.current) return;
+    if (didDrag.current) {
+      didDrag.current = false;
+      setDragLocked(false);
+      return;
+    }
 
     if (swiping) {
       if (offsetX < -SWIPE_THRESHOLD) {
@@ -114,6 +120,7 @@ export default function TaskRow({
         style={{
           transform: `translateX(${offsetX}px)`,
           transition: swiping ? 'none' : 'transform 200ms ease',
+          touchAction: (dragLocked || isDragging) ? 'none' : 'pan-y',
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
