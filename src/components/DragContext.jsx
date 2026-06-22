@@ -23,6 +23,8 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
       ghostRef.current.remove();
       ghostRef.current = null;
     }
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
     setDragging(null);
     setDropTarget(null);
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
@@ -31,6 +33,10 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
   const startDrag = useCallback((taskId, sourceEl) => {
     if (!sourceEl) return;
     const rect = sourceEl.getBoundingClientRect();
+
+    // Prevent the whole page from scrolling/bouncing while a drag is active
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
 
     // Build ghost
     const ghost = sourceEl.cloneNode(true);
@@ -63,6 +69,7 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
     if (!dragging) return;
 
     const onMove = (e) => {
+      e.preventDefault(); // block page scroll while dragging a task
       const touch = e.touches[0];
       lastPos.current = { x: touch.clientX, y: touch.clientY };
 
@@ -106,7 +113,7 @@ export default function DragContext({ children, onMoveTask, weekDays }) {
       cleanup();
     };
 
-    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onEnd);
     window.addEventListener('touchcancel', cleanup);
 
