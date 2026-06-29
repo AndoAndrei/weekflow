@@ -7,7 +7,8 @@ import Checkbox from './Checkbox';
 
 const SWIPE_THRESHOLD = 80;
 const LONG_PRESS_MS = 600;
-const DRAG_THRESHOLD = 8; // px movement before we call it a drag
+const DRAG_THRESHOLD = 8;   // px horizontal movement before we call it a swipe
+const SCROLL_CANCEL_THRESHOLD = 10; // px vertical movement before we cancel a tap
 
 export default function TaskRow({
   task,
@@ -15,8 +16,8 @@ export default function TaskRow({
   onDelete,
   onEdit,
   onComment,
-  onDragStart,   // (taskId, element) => void
-  isDragging,    // bool - this row is the ghost source
+  onDragStart,
+  isDragging,
 }) {
   const [offsetX, setOffsetX] = useState(0);
   const [swiping, setSwiping] = useState(false);
@@ -24,26 +25,25 @@ export default function TaskRow({
   const [expanded, setExpanded] = useState(false);
   const [commentText, setCommentText] = useState(task.comment || '');
   const [editingComment, setEditingComment] = useState(false);
-  const [dragLocked, setDragLocked] = useState(false); // locks touch-action once a drag begins
+  const [dragLocked, setDragLocked] = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
-  const touchStartTime = useRef(null);
   const longPressTimer = useRef(null);
   const didSwipe = useRef(false);
   const didDrag = useRef(false);
+  const didScroll = useRef(false); // true if the page scrolled during this touch
   const rowRef = useRef(null);
 
-  // ---- Touch handling: swipe left = delete, hold = drag, tap = expand ----
   const onTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
-    touchStartTime.current = Date.now();
     didSwipe.current = false;
     didDrag.current = false;
+    didScroll.current = false;
 
     longPressTimer.current = setTimeout(() => {
-      if (!didSwipe.current) {
+      if (!didSwipe.current && !didScroll.current) {
         didDrag.current = true;
         setDragLocked(true);
         onDragStart(task.id, rowRef.current);
@@ -53,14 +53,18 @@ export default function TaskRow({
 
   const onTouchMove = (e) => {
     if (didDrag.current) return; // drag context handles it globally
+
     const dx = e.touches[0].clientX - touchStartX.current;
     const dy = e.touches[0].clientY - touchStartY.current;
 
-    if (Math.abs(dy) > 10) {
+    // Vertical movement beyond threshold = the user is scrolling the page,
+    // not tapping. Cancel any pending tap/expand and the long-press timer.
+    if (Math.abs(dy) > SCROLL_CANCEL_THRESHOLD) {
+      didScroll.current = true;
       clearTimeout(longPressTimer.current);
     }
 
-    if (dx < -DRAG_THRESHOLD) {
+    if (dx < -DRAG_THRESHOLD && Math.abs(dy) < SCROLL_CANCEL_THRESHOLD) {
       didSwipe.current = true;
       clearTimeout(longPressTimer.current);
       setSwiping(true);
@@ -70,6 +74,7 @@ export default function TaskRow({
 
   const onTouchEnd = () => {
     clearTimeout(longPressTimer.current);
+
     if (didDrag.current) {
       didDrag.current = false;
       setDragLocked(false);
@@ -84,11 +89,13 @@ export default function TaskRow({
         setOffsetX(0);
       }
       setSwiping(false);
-    } else if (!didSwipe.current) {
-      // Tap = toggle expand
+    } else if (!didSwipe.current && !didScroll.current) {
+      // Only treat as a tap if the finger never scrolled and never swiped
       setExpanded(prev => !prev);
     }
+
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   const saveComment = () => {
@@ -109,7 +116,7 @@ export default function TaskRow({
       {/* Swipe delete background */}
       <div
         className="absolute inset-y-0 right-0 flex items-center justify-end px-5"
-        style={{ backgroundColor: '#FF3B30', minWidth: 140, borderRadius: 0 }}
+        style={{ backgroundColor: '#FF3B30', minWidth: 140 }}
       >
         <span className="text-white text-sm font-medium">Delete</span>
       </div>
@@ -150,7 +157,7 @@ export default function TaskRow({
 
           <div className="flex-1 min-w-0">
             <span
-              className="block text-base leading-snug select-none"
+              className="block text-base leading-snug select-none font-medium"
               style={{
                 color: task.completed ? '#8E8E93' : '#000',
                 textDecoration: task.completed ? 'line-through' : 'none',
@@ -160,7 +167,6 @@ export default function TaskRow({
             >
               {task.title}
             </span>
-            {/* Comment preview */}
             {!expanded && task.comment && (
               <span className="block text-xs mt-0.5 truncate" style={{ color: '#8E8E93' }}>
                 {task.comment}
@@ -168,7 +174,6 @@ export default function TaskRow({
             )}
           </div>
 
-          {/* Expand chevron */}
           <div
             className="flex-shrink-0 w-5 h-5 flex items-center justify-center"
             style={{ transition: 'transform 200ms ease', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -241,7 +246,6 @@ export default function TaskRow({
               </p>
             )}
 
-            {/* Edit title */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
