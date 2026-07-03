@@ -14,13 +14,6 @@ import { exportBackup, getLastBackupMeta } from './utils/storage';
 import { getWeekDays, toDateKey, todayKey, weekRangeLabel } from './utils/weekUtils';
 
 const weekDays = getWeekDays();
-useEffect(() => {
-  const key = todayKey();
-  setTimeout(() => {
-    const el = document.querySelector(`[data-day-key="${key}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
-}, []);
 
 // Auto-backup: export silently if it has been more than 24 hours since last backup
 // We don't auto-download every time (that would be annoying) — instead we prompt the user
@@ -34,6 +27,15 @@ export default function App() {
     moveTask, restoreTasks, tasksForDay, forceRollover,
   } = useTasks();
 
+  // Scroll to today on mount
+  useEffect(() => {
+    const key = todayKey();
+    setTimeout(() => {
+      const el = document.querySelector(`[data-day-key="${key}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, []);
+  
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetDate, setSheetDate] = useState(todayKey());
   const [backupOpen, setBackupOpen] = useState(false);
