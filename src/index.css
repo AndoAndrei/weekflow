@@ -7,16 +7,39 @@
   box-sizing: border-box;
 }
 
-html, body {
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
   background-color: #FFFDF7;
+  color: #1a1a1a;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    background-color: #151513;
+    color: #f5f5f0;
+  }
+}
+
 /* Safe area padding for iPhone notch / home indicator */
-.safe-top    { padding-top: env(safe-area-inset-top); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
 /* Smooth checkbox animation */
 .checkbox-fill {
@@ -38,27 +61,54 @@ html, body {
 
 /* Fade-in for new tasks */
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .fade-in {
   animation: fadeSlideIn 200ms ease forwards;
 }
 
 /* Sheet backdrop */
 @keyframes backdropIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
-.backdrop-enter { animation: backdropIn 200ms ease forwards; }
+
+.backdrop-enter {
+  animation: backdropIn 200ms ease forwards;
+}
 
 /* Sheet slide up */
 @keyframes sheetUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
 }
-.sheet-enter { animation: sheetUp 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+
+.sheet-enter {
+  animation: sheetUp 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
 
 /* Scrollbar hidden on mobile */
-::-webkit-scrollbar { display: none; }
+::-webkit-scrollbar {
+  display: none;
+}
+
 scrollbar-width: none;
