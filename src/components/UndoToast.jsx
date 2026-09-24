@@ -3,19 +3,17 @@
 // Author: Andrei Ando
 
 import React, { useEffect, useState } from 'react';
+import { useTheme } from '../theme';
 
 const DURATION_MS = 4000;
 
 export default function UndoToast({ pendingDeletes, onUndo }) {
-  // Show only the most recent pending delete
+  const theme = useTheme();
   const latest = pendingDeletes.length > 0 ? pendingDeletes[pendingDeletes.length - 1] : null;
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
-    if (!latest) {
-      setProgress(100);
-      return;
-    }
+    if (!latest) { setProgress(100); return; }
     setProgress(100);
     const start = Date.now();
     const interval = setInterval(() => {
@@ -40,33 +38,24 @@ export default function UndoToast({ pendingDeletes, onUndo }) {
         animation: 'toastSlideUp 220ms cubic-bezier(0.32,0.72,0,1)',
       }}
     >
-      <div
-        className="rounded-2xl overflow-hidden shadow-lg"
-        style={{ backgroundColor: '#1C1C1E' }}
-      >
+      <div className="rounded-2xl overflow-hidden shadow-lg" style={{ backgroundColor: theme.toastBg }}>
         <div className="flex items-center justify-between px-4 py-3 gap-3">
-          <span className="text-sm text-white">Task deleted</span>
+          <span className="text-sm" style={{ color: '#FFFFFF' }}>Task deleted</span>
           <button
             onClick={() => onUndo(latest.id)}
             className="text-sm font-semibold flex-shrink-0"
-            style={{ color: '#FFD60A' }}
+            style={{ color: theme.accent }}
           >
             Undo
           </button>
         </div>
-        {/* Draining progress bar */}
         <div className="h-0.5 w-full" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
           <div
             className="h-full"
-            style={{
-              width: `${progress}%`,
-              backgroundColor: '#FFD60A',
-              transition: 'width 50ms linear',
-            }}
+            style={{ width: `${progress}%`, backgroundColor: theme.accent, transition: 'width 50ms linear' }}
           />
         </div>
       </div>
-
       <style>{`
         @keyframes toastSlideUp {
           from { opacity: 0; transform: translate(-50%, 16px); }

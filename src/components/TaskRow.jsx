@@ -4,21 +4,15 @@
 
 import React, { useRef, useState } from 'react';
 import Checkbox from './Checkbox';
+import { useTheme } from '../theme';
 
 const SWIPE_THRESHOLD = 80;
 const LONG_PRESS_MS = 600;
-const DRAG_THRESHOLD = 8;   // px horizontal movement before we call it a swipe
-const SCROLL_CANCEL_THRESHOLD = 10; // px vertical movement before we cancel a tap
+const DRAG_THRESHOLD = 8;
+const SCROLL_CANCEL_THRESHOLD = 10;
 
-export default function TaskRow({
-  task,
-  onToggle,
-  onDelete,
-  onEdit,
-  onComment,
-  onDragStart,
-  isDragging,
-}) {
+export default function TaskRow({ task, onToggle, onDelete, onEdit, onComment, onDragStart, isDragging }) {
+  const theme = useTheme();
   const [offsetX, setOffsetX] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -32,7 +26,7 @@ export default function TaskRow({
   const longPressTimer = useRef(null);
   const didSwipe = useRef(false);
   const didDrag = useRef(false);
-  const didScroll = useRef(false); // true if the page scrolled during this touch
+  const didScroll = useRef(false);
   const rowRef = useRef(null);
 
   const onTouchStart = (e) => {
@@ -52,13 +46,10 @@ export default function TaskRow({
   };
 
   const onTouchMove = (e) => {
-    if (didDrag.current) return; // drag context handles it globally
-
+    if (didDrag.current) return;
     const dx = e.touches[0].clientX - touchStartX.current;
     const dy = e.touches[0].clientY - touchStartY.current;
 
-    // Vertical movement beyond threshold = the user is scrolling the page,
-    // not tapping. Cancel any pending tap/expand and the long-press timer.
     if (Math.abs(dy) > SCROLL_CANCEL_THRESHOLD) {
       didScroll.current = true;
       clearTimeout(longPressTimer.current);
@@ -74,13 +65,11 @@ export default function TaskRow({
 
   const onTouchEnd = () => {
     clearTimeout(longPressTimer.current);
-
     if (didDrag.current) {
       didDrag.current = false;
       setDragLocked(false);
       return;
     }
-
     if (swiping) {
       if (offsetX < -SWIPE_THRESHOLD) {
         setOffsetX(-140);
@@ -90,10 +79,8 @@ export default function TaskRow({
       }
       setSwiping(false);
     } else if (!didSwipe.current && !didScroll.current) {
-      // Only treat as a tap if the finger never scrolled and never swiped
       setExpanded(prev => !prev);
     }
-
     touchStartX.current = null;
     touchStartY.current = null;
   };
@@ -116,15 +103,16 @@ export default function TaskRow({
       {/* Swipe delete background */}
       <div
         className="absolute inset-y-0 right-0 flex items-center justify-end px-5"
-        style={{ backgroundColor: '#FF3B30', minWidth: 140 }}
+        style={{ backgroundColor: theme.delete, minWidth: 140 }}
       >
         <span className="text-white text-sm font-medium">Delete</span>
       </div>
 
       {/* Main row */}
       <div
-        className="relative bg-white"
+        className="relative"
         style={{
+          backgroundColor: theme.surface,
           transform: `translateX(${offsetX}px)`,
           transition: swiping ? 'none' : 'transform 200ms ease',
           touchAction: (dragLocked || isDragging) ? 'none' : 'pan-y',
@@ -136,14 +124,11 @@ export default function TaskRow({
         {/* Title row */}
         <div className="flex items-center gap-3 px-4 py-3">
           {/* Drag handle */}
-          <div
-            className="flex-shrink-0 flex flex-col gap-0.5 cursor-grab active:cursor-grabbing pr-1"
-            style={{ touchAction: 'none' }}
-          >
+          <div className="flex-shrink-0 flex flex-col gap-0.5 pr-1" style={{ touchAction: 'none' }}>
             {[0,1,2].map(i => (
               <div key={i} className="flex gap-0.5">
-                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#D1D1D6' }} />
-                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#D1D1D6' }} />
+                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.dragHandle }} />
+                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.dragHandle }} />
               </div>
             ))}
           </div>
@@ -159,7 +144,7 @@ export default function TaskRow({
             <span
               className="block text-base leading-snug select-none font-medium"
               style={{
-                color: task.completed ? '#8E8E93' : '#000',
+                color: task.completed ? theme.textSecondary : theme.textPrimary,
                 textDecoration: task.completed ? 'line-through' : 'none',
                 opacity: task.completed ? 0.5 : 1,
                 transition: 'opacity 200ms ease',
@@ -168,7 +153,7 @@ export default function TaskRow({
               {task.title}
             </span>
             {!expanded && task.comment && (
-              <span className="block text-xs mt-0.5 truncate" style={{ color: '#8E8E93' }}>
+              <span className="block text-xs mt-0.5 truncate" style={{ color: theme.textSecondary }}>
                 {task.comment}
               </span>
             )}
@@ -179,7 +164,7 @@ export default function TaskRow({
             style={{ transition: 'transform 200ms ease', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-              <path d="M1 1.5l5 5 5-5" stroke="#C7C7CC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 1.5l5 5 5-5" stroke={theme.textTertiary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
         </div>
@@ -188,20 +173,20 @@ export default function TaskRow({
         {expanded && (
           <div
             className="px-4 pb-3"
-            style={{ borderTop: '1px solid #F2F2F2' }}
+            style={{ borderTop: `1px solid ${theme.separator}` }}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 pt-2 mb-1">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M1 1h11v8H7.5L4 12V9H1V1z" stroke="#C7C7CC" strokeWidth="1.2" strokeLinejoin="round" />
+                <path d="M1 1h11v8H7.5L4 12V9H1V1z" stroke={theme.textTertiary} strokeWidth="1.2" strokeLinejoin="round" />
               </svg>
-              <span className="text-xs font-medium" style={{ color: '#C7C7CC' }}>Note</span>
+              <span className="text-xs font-medium" style={{ color: theme.textTertiary }}>Note</span>
               {!editingComment && (
                 <button
                   onClick={() => setEditingComment(true)}
-                  className="ml-auto text-xs"
-                  style={{ color: '#FFD60A', fontWeight: 600 }}
+                  className="ml-auto text-xs font-semibold"
+                  style={{ color: theme.accent }}
                 >
                   {task.comment ? 'Edit' : 'Add'}
                 </button>
@@ -217,20 +202,25 @@ export default function TaskRow({
                   placeholder="Add a note..."
                   rows={3}
                   className="w-full text-sm rounded-xl px-3 py-2 outline-none resize-none"
-                  style={{ backgroundColor: '#F2F2F7', color: '#000', fontSize: 14 }}
+                  style={{
+                    backgroundColor: theme.surfaceAlt,
+                    color: theme.textPrimary,
+                    fontSize: 14,
+                    border: `1px solid ${theme.border}`,
+                  }}
                 />
                 <div className="flex gap-2 mt-2 justify-end">
                   <button
                     onClick={() => { setCommentText(task.comment || ''); setEditingComment(false); }}
                     className="text-sm px-3 py-1 rounded-lg"
-                    style={{ color: '#8E8E93', backgroundColor: '#F2F2F7' }}
+                    style={{ color: theme.textSecondary, backgroundColor: theme.surfaceAlt }}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={saveComment}
                     className="text-sm px-3 py-1 rounded-lg font-medium"
-                    style={{ backgroundColor: '#FFD60A', color: '#000' }}
+                    style={{ backgroundColor: theme.accent, color: '#000' }}
                   >
                     Save
                   </button>
@@ -239,7 +229,7 @@ export default function TaskRow({
             ) : (
               <p
                 className="text-sm"
-                style={{ color: task.comment ? '#3C3C43' : '#C7C7CC', minHeight: 20 }}
+                style={{ color: task.comment ? theme.textPrimary : theme.textTertiary, minHeight: 20 }}
                 onClick={() => setEditingComment(true)}
               >
                 {task.comment || 'Tap to add a note...'}
@@ -253,7 +243,7 @@ export default function TaskRow({
                 if (newTitle && newTitle.trim()) onEdit(task.id, newTitle.trim());
               }}
               className="mt-3 text-xs"
-              style={{ color: '#8E8E93' }}
+              style={{ color: theme.textSecondary }}
             >
               ✏️ Edit title
             </button>

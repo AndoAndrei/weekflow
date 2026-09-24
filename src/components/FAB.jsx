@@ -3,8 +3,10 @@
 // Author: Andrei Ando
 
 import React, { useState } from 'react';
+import { useTheme } from '../theme';
 
 export default function FAB({ onClick }) {
+  const theme = useTheme();
   const [pressed, setPressed] = useState(false);
 
   return (
@@ -14,14 +16,14 @@ export default function FAB({ onClick }) {
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       aria-label="Add task"
-      className="fixed z-40 flex items-center justify-center rounded-full shadow-lg"
+      className="fixed z-40 flex items-center justify-center rounded-full"
       style={{
         width: 56,
         height: 56,
-        backgroundColor: '#FFD60A',
+        backgroundColor: theme.accent,
         bottom: 'calc(1.75rem + env(safe-area-inset-bottom))',
         right: '1.25rem',
-        boxShadow: '0 4px 16px rgba(255,214,10,0.45)',
+        boxShadow: `0 4px 16px ${theme.accentShadow}`,
         transform: pressed ? 'scale(0.92)' : 'scale(1)',
         transition: 'transform 180ms cubic-bezier(0.32,0.72,0,1)',
       }}

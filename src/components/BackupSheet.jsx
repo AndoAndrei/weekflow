@@ -4,17 +4,17 @@
 
 import React, { useRef, useState } from 'react';
 import { exportBackup, importBackup, getLastBackupMeta } from '../utils/storage';
+import { useTheme } from '../theme';
 
 export default function BackupSheet({ tasks, onRestore, onClose }) {
+  const theme = useTheme();
   const fileInputRef = useRef(null);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState(null);
   const [importSuccess, setImportSuccess] = useState(false);
   const lastBackup = getLastBackupMeta();
 
-  const handleExport = () => {
-    exportBackup(tasks);
-  };
+  const handleExport = () => exportBackup(tasks);
 
   const handleImportClick = () => {
     setImportError(null);
@@ -44,9 +44,7 @@ export default function BackupSheet({ tasks, onRestore, onClose }) {
     }
   };
 
-  const handleBackdrop = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
+  const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
 
   const fmtDate = (iso) => {
     if (!iso) return '—';
@@ -59,45 +57,45 @@ export default function BackupSheet({ tasks, onRestore, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end backdrop-enter"
-      style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       onClick={handleBackdrop}
     >
       <div
         className="w-full sheet-enter rounded-t-3xl px-5 pt-5"
         style={{
-          backgroundColor: '#FFFDF7',
+          backgroundColor: theme.bg,
           paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))',
           maxWidth: 680,
           margin: '0 auto',
+          borderTop: `1px solid ${theme.borderStrong}`,
         }}
       >
-        {/* Handle */}
-        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: '#C7C7CC' }} />
+        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: theme.textTertiary }} />
 
-        <h2 className="text-xl font-bold mb-1">Backup & Restore</h2>
-        <p className="text-sm mb-5" style={{ color: '#8E8E93' }}>
+        <h2 className="text-xl font-bold mb-1" style={{ color: theme.textPrimary }}>Backup & Restore</h2>
+        <p className="text-sm mb-5" style={{ color: theme.textSecondary }}>
           Export your tasks as a JSON file you can save to iCloud Drive via the Files app.
         </p>
 
         {/* Last backup info */}
         <div
           className="rounded-2xl px-4 py-3 mb-4 flex items-center justify-between"
-          style={{ backgroundColor: '#F2F2F7' }}
+          style={{ backgroundColor: theme.surfaceAlt }}
         >
           <div>
-            <p className="text-xs font-medium" style={{ color: '#8E8E93' }}>Last backup</p>
-            <p className="text-sm font-semibold mt-0.5">
+            <p className="text-xs font-medium" style={{ color: theme.textSecondary }}>Last backup</p>
+            <p className="text-sm font-semibold mt-0.5" style={{ color: theme.textPrimary }}>
               {lastBackup ? fmtDate(lastBackup.timestamp) : 'Never'}
             </p>
             {lastBackup && (
-              <p className="text-xs mt-0.5" style={{ color: '#8E8E93' }}>
+              <p className="text-xs mt-0.5" style={{ color: theme.textSecondary }}>
                 {lastBackup.taskCount} task{lastBackup.taskCount !== 1 ? 's' : ''}
               </p>
             )}
           </div>
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: lastBackup ? '#34C759' : '#C7C7CC' }}
+            style={{ backgroundColor: lastBackup ? theme.success : theme.textTertiary }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path d="M3 10v4a1 1 0 001 1h10a1 1 0 001-1v-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
@@ -106,26 +104,23 @@ export default function BackupSheet({ tasks, onRestore, onClose }) {
           </div>
         </div>
 
-        {/* Current task count */}
-        <p className="text-xs mb-4 text-center" style={{ color: '#8E8E93' }}>
+        <p className="text-xs mb-4 text-center" style={{ color: theme.textSecondary }}>
           {tasks.length} task{tasks.length !== 1 ? 's' : ''} currently in WeekFlow
         </p>
 
-        {/* Export button */}
         <button
           onClick={handleExport}
           className="w-full py-4 rounded-2xl text-base font-semibold mb-3"
-          style={{ backgroundColor: '#FFD60A', color: '#000' }}
+          style={{ backgroundColor: theme.accent, color: '#000' }}
         >
           Export Backup
         </button>
 
-        {/* Import button */}
         <button
           onClick={handleImportClick}
           disabled={importing}
           className="w-full py-4 rounded-2xl text-base font-semibold mb-3"
-          style={{ backgroundColor: '#F2F2F7', color: importing ? '#C7C7CC' : '#000' }}
+          style={{ backgroundColor: theme.surfaceAlt, color: importing ? theme.textTertiary : theme.textPrimary }}
         >
           {importing ? 'Importing...' : 'Restore from Backup'}
         </button>
@@ -139,15 +134,13 @@ export default function BackupSheet({ tasks, onRestore, onClose }) {
         />
 
         {importError && (
-          <p className="text-sm text-center mt-1" style={{ color: '#FF3B30' }}>{importError}</p>
+          <p className="text-sm text-center mt-1" style={{ color: theme.delete }}>{importError}</p>
         )}
         {importSuccess && (
-          <p className="text-sm text-center mt-1" style={{ color: '#34C759' }}>
-            Tasks restored successfully.
-          </p>
+          <p className="text-sm text-center mt-1" style={{ color: theme.success }}>Tasks restored successfully.</p>
         )}
 
-        <p className="text-xs text-center mt-4" style={{ color: '#C7C7CC' }}>
+        <p className="text-xs text-center mt-4" style={{ color: theme.textTertiary }}>
           On iPhone: tap Export, then tap the share icon and choose Save to Files to store in iCloud Drive.
         </p>
       </div>

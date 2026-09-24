@@ -3,24 +3,22 @@
 // Author: Andrei Ando
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../theme';
 import { getWeekDays, toDateKey, todayKey, dayName } from '../utils/weekUtils';
 
 export default function AddTaskSheet({ defaultDate, onAdd, onClose }) {
+  const theme = useTheme();
   const [title, setTitle] = useState('');
   const [selectedDate, setSelectedDate] = useState(defaultDate || todayKey());
   const inputRef = useRef(null);
   const weekDays = getWeekDays();
 
   useEffect(() => {
-    // Autofocus after sheet animation
     const t = setTimeout(() => inputRef.current?.focus(), 320);
     return () => clearTimeout(t);
   }, []);
 
-  // Close on backdrop click
-  const handleBackdrop = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
+  const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose(); };
 
   const handleSubmit = () => {
     if (!title.trim()) return;
@@ -35,37 +33,33 @@ export default function AddTaskSheet({ defaultDate, onAdd, onClose }) {
 
   const selectedDayName = () => {
     const d = new Date(selectedDate + 'T00:00:00');
-    const today = todayKey();
-    if (selectedDate === today) return 'Today';
+    if (selectedDate === todayKey()) return 'Today';
     return dayName(d);
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end backdrop-enter"
-      style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       onClick={handleBackdrop}
     >
       <div
-        className="w-full sheet-enter rounded-t-3xl px-5 pt-5 pb-10"
+        className="w-full sheet-enter rounded-t-3xl px-5 pt-5"
         style={{
-          backgroundColor: '#FFFDF7',
+          backgroundColor: theme.bg,
           paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))',
           maxWidth: 680,
           margin: '0 auto',
+          borderTop: `1px solid ${theme.borderStrong}`,
         }}
       >
-        {/* Drag handle */}
-        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: '#C7C7CC' }} />
+        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: theme.textTertiary }} />
 
         <div className="mb-1">
-          <h2 className="text-xl font-bold mb-0.5">New Task</h2>
-          <p className="text-sm" style={{ color: '#8E8E93' }}>
-            Adding to {selectedDayName()}
-          </p>
+          <h2 className="text-xl font-bold mb-0.5" style={{ color: theme.textPrimary }}>New Task</h2>
+          <p className="text-sm" style={{ color: theme.textSecondary }}>Adding to {selectedDayName()}</p>
         </div>
 
-        {/* Text input */}
         <input
           ref={inputRef}
           type="text"
@@ -75,9 +69,10 @@ export default function AddTaskSheet({ defaultDate, onAdd, onClose }) {
           placeholder="What needs to get done?"
           className="w-full mt-4 mb-4 px-4 py-3.5 rounded-xl text-base outline-none"
           style={{
-            backgroundColor: '#F2F2F7',
-            color: '#000',
+            backgroundColor: theme.surfaceAlt,
+            color: theme.textPrimary,
             fontSize: 17,
+            border: `1px solid ${theme.border}`,
           }}
         />
 
@@ -92,8 +87,8 @@ export default function AddTaskSheet({ defaultDate, onAdd, onClose }) {
                 onClick={() => setSelectedDate(key)}
                 className="flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: selected ? '#FFD60A' : '#F2F2F7',
-                  color: selected ? '#000' : '#8E8E93',
+                  backgroundColor: selected ? theme.accent : theme.surfaceAlt,
+                  color: selected ? '#000' : theme.textSecondary,
                 }}
               >
                 {d.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -102,13 +97,12 @@ export default function AddTaskSheet({ defaultDate, onAdd, onClose }) {
           })}
         </div>
 
-        {/* Add button */}
         <button
           onClick={handleSubmit}
           disabled={!title.trim()}
           className="w-full py-4 rounded-2xl text-base font-semibold transition-opacity"
           style={{
-            backgroundColor: '#FFD60A',
+            backgroundColor: theme.accent,
             color: '#000',
             opacity: title.trim() ? 1 : 0.4,
           }}
