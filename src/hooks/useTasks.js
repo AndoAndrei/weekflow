@@ -7,6 +7,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { loadTasks, saveTasks, loadLastOpen, saveLastOpen } from '../utils/storage';
 import { toDateKey, todayKey, getWeekStart } from '../utils/weekUtils';
 
+// Uncompleted tasks first, completed below, each group keeping manual order
+function compareTasks(a, b) {
+  return (
+    Number(!!a.completed) - Number(!!b.completed) ||
+    (a.order ?? 0) - (b.order ?? 0) ||
+    new Date(a.createdAt) - new Date(b.createdAt)
+  );
+}
+
 function applyRollover(tasks) {
   const today = todayKey();
   const todayWeekStart = toDateKey(getWeekStart(new Date()));
@@ -128,7 +137,7 @@ export default function useTasks() {
       const without = prev.filter(t => t.id !== taskId);
       const dayTasks = without
         .filter(t => t.assignedDate === targetDateKey)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        .sort(compareTasks);
       dayTasks.splice(targetIndex, 0, { ...task, assignedDate: targetDateKey });
       const reordered = dayTasks.map((t, i) => ({ ...t, order: i }));
       const otherTasks = without.filter(t => t.assignedDate !== targetDateKey);
@@ -145,7 +154,7 @@ export default function useTasks() {
     (dateKey) =>
       tasks
         .filter((t) => t.assignedDate === dateKey)
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || new Date(a.createdAt) - new Date(b.createdAt)),
+        .sort(compareTasks),
     [tasks]
   );
 
