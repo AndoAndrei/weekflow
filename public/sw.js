@@ -1,17 +1,13 @@
-const CACHE_NAME = 'weekflow-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/static/js/main.chunk.js',
-  '/static/js/bundle.js',
-  '/static/css/main.chunk.css',
-  '/manifest.json'
-];
+// sw.js
+// WeekFlow
+// Author: Andrei Ando
+//
+// Network-first: always try to fetch the latest version, and fall back to the
+// cache only when offline. Bump CACHE_NAME to clear out older caches.
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS).catch(() => {}))
-  );
+const CACHE_NAME = 'weekflow-v2';
+
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -27,13 +23,14 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then((cached) =>
-      cached ||
-      fetch(e.request).then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+    fetch(e.request)
+      .then((response) => {
+        if (response && response.status === 200 && response.type === 'basic') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+        }
         return response;
       })
-    ).catch(() => caches.match('/index.html'))
+      .catch(() => caches.match(e.request).then((cached) => cached || caches.match('/index.html')))
   );
 });
